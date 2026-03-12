@@ -1,5 +1,3 @@
-<img width="2382" height="1724" alt="image" src="https://github.com/user-attachments/assets/13f1178a-215b-43d9-aa29-d96499ead223" /># chn-skill-annotator
-
 这是一个小工具，用来给当前目录里的 `SKILL.md` 文件补中文 `description`。
 
 如果一个技能文件的 `description` 只有英文，它会帮你把中文摘要加在前面，保留后面的英文内容。  
