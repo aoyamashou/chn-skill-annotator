@@ -1,0 +1,4 @@
+interface:
+  display_name: "CHN Skill Annotator"
+  short_description: "Annotate skill descriptions in Chinese"
+  default_prompt: "Add concise Chinese summaries to description fields in SKILL.md files under the current directory, skip entries that already contain Chinese, and support check or dry-run modes."
