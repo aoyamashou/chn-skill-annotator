@@ -1,4 +1,4 @@
-# chn-skill-annotator
+<img width="2382" height="1724" alt="image" src="https://github.com/user-attachments/assets/13f1178a-215b-43d9-aa29-d96499ead223" /># chn-skill-annotator
 
 这是一个小工具，用来给当前目录里的 `SKILL.md` 文件补中文 `description`。
 
@@ -19,6 +19,10 @@
 ```yaml
 description: 中文摘要｜Original English description
 ```
+大概会是这样一个效果。
+
+<img width="2382" height="1724" alt="image" src="https://github.com/user-attachments/assets/e212603f-b730-46aa-a3b7-46ff4cba4620" />
+
 
 ## 适合什么时候用
 
