@@ -1,113 +1,188 @@
 ---
-name: chn-skill-annotator
-description: 为当前目录下各个 SKILL.md 的 description 批量补充中文注释并跳过已有中文项｜Annotate frontmatter description fields in SKILL.md files under the current directory with a concise Chinese one-line summary, preserving the original English description. Use when the user asks to add Chinese notes to skill metadata, scan SKILL.md descriptions, check which skills still lack Chinese, preview changes with dry-run, or batch-update current-directory skills only.
+name: chn-note-security-scan
+description: 在安装新的 Skill 或 MCP 后，先询问是否执行中文备注与安全审计，并按用户选择运行对应流程。支持三选一入口：中文备注+安全审计、仅中文备注、仅安全审计。
+version: "0.1.0"
 ---
 
-# CHN Skill Annotator
+# CHN Note Security Scan
 
-## Overview
+当用户安装新的 Skill 或 MCP，或要求你为 Skill / MCP 执行中文备注与安全检查时，使用这个 Skill。
 
-Scan `SKILL.md` files under the current directory, detect whether `description` already contains Chinese, and prepend a concise Chinese summary when needed.
+这个 Skill 是一个入口协调器，负责先询问用户，再根据选择执行对应子流程。
 
-Use the bundled script for scanning, plan validation, dry-run previews, and deterministic writeback. Generate the Chinese summaries yourself before applying them.
+## 固定交互流程
 
-## Workflow
+触发后，第一句必须先问用户：
 
-1. Run the checker first to identify which `SKILL.md` files still need Chinese annotations.
-2. Read each pending `description` and write one concise Chinese sentence.
-3. If the original description is a placeholder or TODO-style text, use `等待写入描述`.
-4. Save the summaries into a JSON plan file.
-5. Run `dry-run` to preview the changes.
-6. Run `annotate` to write the changes after the preview looks correct.
+`即将安装新的Skill或MCP，在安装后是否进行前置操作？`
 
-## Summary Rules
+然后紧接着给出三个选项：
 
-- Keep the Chinese summary concise. Target roughly `10-25` Chinese characters.
-- Use direct functional language instead of marketing language.
-- Preserve the original English description after the Chinese summary.
-- Always use the full-width separator `｜`.
-- If a `description` already contains Chinese, skip it.
-- If the YAML description uses block style (`|`), prepend the Chinese summary only to the first non-empty content line.
-- Only modify the frontmatter `description` field.
-- Only operate on `SKILL.md` files under the current directory.
+`1. 中文备注+安全审计`
 
-## Script
+`2. 仅中文备注`
 
-Use `scripts/annotate_descriptions.py` and `scripts/generate_plan.py`.
+`3. 仅安全审计`
 
-### Generate a plan template
+如果用户没有明确选择，默认按：
 
-```bash
-python scripts/generate_plan.py --output ./plan.json --include-original
-```
+`1. 中文备注+安全审计`
 
-This scans the current directory recursively and writes a template JSON file containing only the `SKILL.md` files that still need Chinese summaries.
+处理。
 
-Use `--overwrite` if the output file already exists.
+## 选择分流规则
 
-Add `--auto-summary` to prefill a heuristic Chinese candidate summary for each pending entry.
+### 选项 1
 
-### Check files
+先执行“中文备注”流程，再执行“安全审计”流程。
 
-```bash
-python scripts/annotate_descriptions.py check
-```
+### 选项 2
 
-This scans the current directory recursively and reports:
+只执行“中文备注”流程，不做安全审计。
 
-- `pending`: no Chinese yet, needs annotation
-- `annotated`: already contains Chinese, skip
-- `missing`: no `description` field
+### 选项 3
 
-### Create a plan
+只执行“安全审计”流程，不做中文备注。
 
-Prepare or generate a JSON file like:
+## 中文备注流程
 
-```json
-{
-  "entries": [
-    {
-      "path": "/absolute/path/to/some/SKILL.md",
-      "summary": "创建和编辑演示文稿"
-    }
-  ]
-}
-```
+仅对目标目录下的 `SKILL.md` 生效。
 
-Rules:
+优先使用以下脚本：
 
-- Use absolute paths when possible.
-- Each `summary` must be Chinese only and must not include `｜`.
-- Use `等待写入描述` for placeholder descriptions.
-- If `--auto-summary` is enabled, review each generated summary before applying it.
+- `scripts/generate_plan.py`
+- `scripts/annotate_descriptions.py`
 
-### Preview changes
+执行顺序：
+
+1. 先检查哪些 `SKILL.md` 还没有中文备注
+2. 为每个待处理项生成简洁中文摘要
+3. 生成 plan 文件
+4. 先执行 dry-run 预览
+5. 预览正常后再执行 annotate
+
+推荐命令：
 
 ```bash
-python scripts/annotate_descriptions.py dry-run --plan /path/to/plan.json
+python3 scripts/annotate_descriptions.py check --root <target>
+python3 scripts/generate_plan.py --root <target> --output /tmp/chn-note-plan.json --include-original --auto-summary --overwrite
+python3 scripts/annotate_descriptions.py dry-run --root <target> --plan /tmp/chn-note-plan.json
+python3 scripts/annotate_descriptions.py annotate --root <target> --plan /tmp/chn-note-plan.json
 ```
 
-### Apply changes
+中文摘要规则：
+
+- 保持简洁，通常 `10-25` 个汉字
+- 使用功能性语言，不写营销文案
+- 保留原英文描述
+- 使用全角分隔符 `｜`
+- 如果已经包含中文，跳过
+- 如果是占位文本，使用 `等待写入描述`
+- 只修改 frontmatter 中的 `description`
+
+如果目标是 MCP 包且目录下没有 `SKILL.md`，明确说明：
+
+`中文备注不适用，已跳过。`
+
+## 安全审计流程
+
+默认优先做快速文本安全扫描。
+
+优先使用：
+
+- `scripts/scan-skills.sh`
+
+默认检查：
+
+- `SKILL.md` 中的提示注入
+- 角色劫持
+- 数据外传
+- 危险破坏命令
+- 硬编码凭据
+- 混淆与隐藏载荷
+- 安全机制绕过
+- frontmatter 完整性
+- 软链接来源信息
+
+推荐命令：
 
 ```bash
-python scripts/annotate_descriptions.py annotate --plan /path/to/plan.json
+bash scripts/scan-skills.sh <target>
 ```
 
-## Output Expectations
+如果用户明确要求“安装前深度审计”或目标是 MCP 包，需要在快速扫描之后补做扩展审计，检查：
 
-The script prints per-file results and a final summary including how many files were:
+- 文件清单与高风险文件
+- 指令层风险
+- 脚本执行层风险
+- 敏感数据读取
+- 外部数据外传
+- 持久化与系统修改
+- 供应链扩张点
 
-- updated
-- skipped
-- missing
-- errored
+## 误报处理
 
-If `dry-run` is used, no files are modified.
+不要仅凭正则命中直接下结论。
 
-## Guardrails
+以下情况要标记为 `FALSE POSITIVE`：
 
-- Do not overwrite Chinese that already exists.
-- Do not rewrite unrelated frontmatter fields.
-- Do not change the `name` field.
-- Do not invent long Chinese paragraphs. One sentence only.
-- Do not touch files outside the current directory tree.
+- 文档只是在讲解 prompt injection 风险
+- 文档只是在列举危险命令作为反例
+- 文档只是在说明如何检测数据外传
+
+如果无法确认，就明确写：
+
+`需要人工复核`
+
+## 输出要求
+
+### 1. 用户选择
+
+先写明本次执行的是：
+
+- `中文备注+安全审计`
+- `仅中文备注`
+- `仅安全审计`
+
+### 2. 中文备注结果
+
+如果执行了中文备注，输出：
+
+- 扫描范围
+- 待处理数量
+- dry-run 结果
+- 实际写入结果
+- 跳过项
+
+### 3. 安全审计结果
+
+如果执行了安全审计，按严重级别分组：
+
+- `🔴 高危`
+- `🟡 中危`
+- `🟢 低危`
+
+每条发现包含：
+
+- 名称
+- 文件路径
+- 风险类别
+- 触发内容摘要
+- 是否误报
+- 为什么重要
+
+### 4. 最终结论
+
+根据本次执行的流程，使用下列结论：
+
+- `可继续使用`
+- `建议修正后使用`
+- `不建议使用`
+
+## 复核原则
+
+- 如果功能冲突或重复，以安全扫描规则和中文备注规则的明确脚本流程为准。
+- 不要把“未检查”写成“无问题”。
+- 不要修改 `name` 字段。
+- 不要改动 `description` 以外的无关 frontmatter。
+- 如果用户只选择其中一项，不要额外执行另一项。
