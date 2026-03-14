@@ -13,6 +13,7 @@ from pathlib import Path
 
 CHINESE_RE = re.compile(r"[\u4e00-\u9fff]")
 DEFAULT_SKILLS_DIR = "skills"
+SEPARATOR = "｜"
 PLACEHOLDER_PATTERNS = (
     re.compile(r"replace with description", re.IGNORECASE),
     re.compile(r"\[todo:.*description", re.IGNORECASE),
@@ -168,6 +169,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Prefill a heuristic Chinese candidate summary for each pending entry.",
     )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Include files that already contain Chinese so summaries can be rewritten.",
+    )
     return parser.parse_args()
 
 
@@ -212,6 +218,12 @@ def extract_description(path: Path) -> tuple[str | None, bool]:
 
 def contains_chinese(text: str) -> bool:
     return bool(CHINESE_RE.search(text))
+
+
+def strip_existing_summary(text: str) -> str:
+    if SEPARATOR in text:
+        return text.split(SEPARATOR, 1)[1].strip()
+    return text
 
 
 def is_placeholder(text: str) -> bool:
@@ -329,7 +341,9 @@ def main() -> int:
         description, frontmatter_ok = extract_description(path)
         if not frontmatter_ok or description is None:
             continue
-        if contains_chinese(description):
+        original_description = description
+        description = strip_existing_summary(description)
+        if contains_chinese(original_description) and not args.all:
             continue
 
         entry = {
@@ -337,7 +351,7 @@ def main() -> int:
             "summary": infer_summary(description) if args.auto_summary else ("等待写入描述" if is_placeholder(description) else ""),
         }
         if args.include_original:
-            entry["original_description"] = description
+            entry["original_description"] = original_description
         entries.append(entry)
 
     output.parent.mkdir(parents=True, exist_ok=True)

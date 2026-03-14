@@ -1,6 +1,6 @@
 ---
 name: chn-skill-annotator
-description: 为 Codex 的 Skills 目录下各个 SKILL.md 的 description 批量补充中文注释并跳过已有中文项｜Annotate frontmatter description fields in SKILL.md files under the Codex skills directory with a concise Chinese one-line summary, preserving the original English description. Use when the user asks to add Chinese notes to skill metadata, scan SKILL.md descriptions, check which skills still lack Chinese, preview changes with dry-run, or batch-update skills in the Codex skills directory.
+description: 批量重写 Skills 描述中文注释｜Annotate frontmatter description fields in SKILL.md files under the Codex skills directory with a concise Chinese one-line summary, preserving the original English description. Use when the user asks to add Chinese notes to skill metadata, scan SKILL.md descriptions, check which skills still lack Chinese, preview changes with dry-run, or batch-update skills in the Codex skills directory.
 ---
 
 # CHN Skill Annotator

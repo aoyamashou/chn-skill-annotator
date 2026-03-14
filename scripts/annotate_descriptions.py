@@ -65,6 +65,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Print machine-readable JSON output in check mode.",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Allow dry-run and annotate to rewrite descriptions that already contain Chinese.",
+    )
     return parser.parse_args()
 
 
@@ -202,6 +207,8 @@ def render_updated_lines(block: DescriptionBlock, summary: str) -> list[str]:
                 continue
             indent = re.match(r"^(\s*)", line).group(1)
             body = line[len(indent) :]
+            if SEPARATOR in body:
+                body = body.split(SEPARATOR, 1)[1]
             content_lines[idx] = f"{indent}{summary}{SEPARATOR}{body}"
             inserted = True
             break
@@ -220,8 +227,12 @@ def render_updated_lines(block: DescriptionBlock, summary: str) -> list[str]:
     ):
         quote = value[0]
         inner = value[1:-1]
+        if SEPARATOR in inner:
+            inner = inner.split(SEPARATOR, 1)[1]
         new_value = f"{quote}{summary}{SEPARATOR}{inner}{quote}"
     else:
+        if SEPARATOR in value:
+            value = value.split(SEPARATOR, 1)[1]
         new_value = f"{summary}{SEPARATOR}{value}"
     lines[block.description_index] = f"{prefix}{new_value}{newline}"
     return lines
@@ -260,7 +271,7 @@ def run_check(root: Path, as_json: bool) -> int:
     return 0
 
 
-def run_apply(root: Path, plan_path: Path, dry_run: bool) -> int:
+def run_apply(root: Path, plan_path: Path, dry_run: bool, force: bool) -> int:
     plan = load_plan(plan_path)
     counts = {"updated": 0, "skipped": 0, "missing": 0, "errored": 0}
 
@@ -280,7 +291,8 @@ def run_apply(root: Path, plan_path: Path, dry_run: bool) -> int:
 
             block = load_description_block(resolved_target)
             status = classify_block(block)
-            if status != "pending":
+            allowed_statuses = {"pending", "annotated"} if force else {"pending"}
+            if status not in allowed_statuses:
                 print(f"skipped     {target_path} ({status})")
                 counts["skipped"] += 1
                 continue
@@ -318,7 +330,7 @@ def main() -> int:
         return 1
 
     plan_path = Path(args.plan).expanduser().resolve()
-    return run_apply(root, plan_path, dry_run=args.mode == "dry-run")
+    return run_apply(root, plan_path, dry_run=args.mode == "dry-run", force=args.force)
 
 
 if __name__ == "__main__":
