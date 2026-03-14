@@ -22,8 +22,9 @@ Use the bundled script for scanning, plan validation, dry-run previews, and dete
 
 ## Summary Rules
 
-- Keep the Chinese summary concise. Target roughly `10-25` Chinese characters.
+- Keep the Chinese summary concise. Target roughly `12-32` Chinese characters.
 - Use direct functional language instead of marketing language.
+- Preserve key qualifiers from the English description when they matter, such as `官方`, `最新`, `交互式`, `私有仓库`, `Cloudflare`, or similar scope-defining details.
 - Preserve the original English description after the Chinese summary.
 - Always use the full-width separator `｜`.
 - If a `description` already contains Chinese, skip it.
@@ -82,7 +83,7 @@ Rules:
 - Use absolute paths when possible.
 - Each `summary` must be Chinese only and must not include `｜`.
 - Use `等待写入描述` for placeholder descriptions.
-- If `--auto-summary` is enabled, review each generated summary before applying it.
+- If `--auto-summary` is enabled, review each generated summary before applying it, especially to confirm it preserves the English description's core scope and qualifiers.
 
 ### Preview changes
 

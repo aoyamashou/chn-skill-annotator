@@ -1,0 +1,44 @@
+{
+  "entries": [
+    {
+      "path": "/Users/corndog/.codex/skills/.system/openai-docs/SKILL.md",
+      "summary": "查阅 OpenAI 官方文档",
+      "original_description": "Use when the user asks how to build with OpenAI products or APIs and needs up-to-date official documentation with citations, help choosing the latest model for a use case, or explicit GPT-5.4 upgrade and prompt-upgrade guidance; prioritize OpenAI docs MCP tools, use bundled references only as helper context, and restrict any fallback browsing to official OpenAI domains."
+    },
+    {
+      "path": "/Users/corndog/.codex/skills/.system/skill-creator/SKILL.md",
+      "summary": "创建和优化技能",
+      "original_description": "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Codex's capabilities with specialized knowledge, workflows, or tool integrations."
+    },
+    {
+      "path": "/Users/corndog/.codex/skills/.system/skill-installer/SKILL.md",
+      "summary": "安装 Codex 技能",
+      "original_description": "Install Codex skills into $CODEX_HOME/skills from a curated list or a GitHub repo path. Use when a user asks to list installable skills, install a curated skill, or install a skill from another repo (including private repos)."
+    },
+    {
+      "path": "/Users/corndog/.codex/skills/cloudflare-deploy/SKILL.md",
+      "summary": "部署到 Cloudflare",
+      "original_description": "Deploy applications and infrastructure to Cloudflare using Workers, Pages, and related platform services. Use when the user asks to deploy, host, publish, or set up a project on Cloudflare."
+    },
+    {
+      "path": "/Users/corndog/.codex/skills/playwright/SKILL.md",
+      "summary": "执行浏览器自动化",
+      "original_description": "Use when the task requires automating a real browser from the terminal (navigation, form filling, snapshots, screenshots, data extraction, UI-flow debugging) via `playwright-cli` or the bundled wrapper script."
+    },
+    {
+      "path": "/Users/corndog/.codex/skills/playwright-interactive/SKILL.md",
+      "summary": "交互式调试浏览器",
+      "original_description": "Persistent browser and Electron interaction through `js_repl` for fast iterative UI debugging."
+    },
+    {
+      "path": "/Users/corndog/.codex/skills/slides/SKILL.md",
+      "summary": "创建和编辑幻灯片",
+      "original_description": "Create and edit presentation slide decks (`.pptx`) with PptxGenJS, bundled layout helpers, and render/validation utilities. Use when tasks involve building a new PowerPoint deck, recreating slides from screenshots/PDFs/reference decks, modifying slide content while preserving editable output, adding charts/diagrams/visuals, or diagnosing layout issues such as overflow, overlaps, and font substitution."
+    },
+    {
+      "path": "/Users/corndog/.codex/skills/spreadsheet/SKILL.md",
+      "summary": "处理电子表格",
+      "original_description": "Use when tasks involve creating, editing, analyzing, or formatting spreadsheets (`.xlsx`, `.csv`, `.tsv`) with formula-aware workflows, cached recalculation, and visual review."
+    }
+  ]
+}

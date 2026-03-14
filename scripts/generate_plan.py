@@ -18,6 +18,61 @@ PLACEHOLDER_PATTERNS = (
     re.compile(r"\[todo:.*description", re.IGNORECASE),
     re.compile(r"todo", re.IGNORECASE),
 )
+QUALITY_HINTS = [
+    ("official documentation", "官方文档"),
+    ("official docs", "官方文档"),
+    ("official", "官方"),
+    ("up-to-date", "最新"),
+    ("latest", "最新"),
+    ("real browser", "真实浏览器"),
+    ("interactive", "交互式"),
+    ("iterative", "迭代式"),
+    ("persistent", "持久化"),
+    ("private repos", "私有仓库"),
+    ("private repo", "私有仓库"),
+    ("github repo path", "仓库路径"),
+    ("github repo", "GitHub 仓库"),
+    ("curated list", "精选列表"),
+    ("render/validation", "渲染校验"),
+    ("validation", "校验"),
+    ("formula-aware", "公式感知"),
+    ("visual review", "可视化检查"),
+    ("cached recalculation", "缓存重算"),
+]
+SUMMARY_PATTERNS = [
+    (
+        re.compile(r"openai.+official documentation|official documentation.+openai", re.IGNORECASE),
+        "查阅 OpenAI 官方最新文档",
+    ),
+    (
+        re.compile(r"creating effective skills|create a new skill|update an existing skill", re.IGNORECASE),
+        "创建和优化 Codex 技能",
+    ),
+    (
+        re.compile(r"install codex skills.+curated list|install codex skills.+github repo", re.IGNORECASE),
+        "从列表或仓库安装 Codex 技能",
+    ),
+    (
+        re.compile(r"deploy.+cloudflare|cloudflare.+deploy|cloudflare using workers, pages", re.IGNORECASE),
+        "部署应用到 Cloudflare",
+    ),
+    (
+        re.compile(r"automating a real browser|real browser.+playwright|navigation, form filling, snapshots", re.IGNORECASE),
+        "通过 Playwright 执行真实浏览器自动化",
+    ),
+    (
+        re.compile(r"persistent browser.+iterative ui debugging|electron interaction.+js_repl", re.IGNORECASE),
+        "通过 js_repl 持续交互调试浏览器",
+    ),
+    (
+        re.compile(r"presentation slide decks|pptx.+pptxgenjs|powerpoint deck", re.IGNORECASE),
+        "创建和编辑 PPTX 演示文稿",
+    ),
+    (
+        re.compile(r"spreadsheets?.+formula-aware|cached recalculation|visual review", re.IGNORECASE),
+        "创建编辑并分析电子表格",
+    ),
+]
 PHRASE_MAP = [
     ("search and manage", "搜索和管理"),
     ("create, manage, and delete", "创建、管理和删除"),
@@ -25,6 +80,9 @@ PHRASE_MAP = [
     ("create, edit, and analyze", "创建、编辑和分析"),
     ("creation, editing, and analysis", "创建、编辑和分析"),
     ("creation and editing", "创建和编辑"),
+    ("creating effective", "创建和优化"),
+    ("create effective", "创建和优化"),
+    ("creating", "创建"),
     ("read and update", "读取和更新"),
     ("fetch and read", "抓取和读取"),
     ("read, watch, and listen to", "读取、观看和收听"),
@@ -32,6 +90,7 @@ PHRASE_MAP = [
     ("search and install", "搜索并安装"),
     ("search, install, and manage", "搜索、安装和管理"),
     ("generate and edit", "生成和编辑"),
+    ("install", "安装"),
     ("generate", "生成"),
     ("annotate", "补充注释"),
     ("deploy", "部署"),
@@ -46,8 +105,10 @@ NOUN_MAP = [
     ("skill descriptions", "技能描述"),
     ("description fields", "描述字段"),
     ("skill metadata", "技能元数据"),
+    ("codex skills", "Codex 技能"),
     ("applications and infrastructure", "应用和基础设施"),
     ("browser automation", "浏览器自动化"),
+    ("real browser", "真实浏览器"),
     ("browser tools", "浏览器工具"),
     ("web pages, apis, and online content", "网页、API 和在线内容"),
     ("videos or audio", "视频或音频"),
@@ -184,15 +245,62 @@ def choose_object(text: str) -> str:
     return "内容"
 
 
+def collect_quality_hints(text: str) -> list[str]:
+    lowered = text.lower()
+    hints: list[str] = []
+    for source, target in QUALITY_HINTS:
+        if source in lowered and target not in hints:
+            hints.append(target)
+    return hints
+
+
+def build_summary_parts(text: str) -> list[str]:
+    action = choose_action(text)
+    obj = choose_object(text)
+    hints = collect_quality_hints(text)
+    lowered = text.lower()
+    parts = [action]
+
+    quality_prefix = "".join(
+        hint for hint in hints if hint in {"官方", "最新", "交互式", "持久化"}
+    )
+    core = f"{quality_prefix}{obj}" if quality_prefix else obj
+
+    parts.append(core)
+
+    tail_hints = [
+        hint
+        for hint in hints
+        if hint not in {"官方", "最新", "真实浏览器", "交互式", "持久化"}
+    ]
+    if "from a curated list" in lowered or "curated list" in lowered:
+        tail_hints.append("精选列表")
+    if "from another repo" in lowered or "github repo path" in lowered or "github repo" in lowered:
+        tail_hints.append("仓库来源")
+    if "use when" in lowered and "openai" in lowered and "documentation" in lowered:
+        tail_hints.append("OpenAI")
+
+    deduped_tail: list[str] = []
+    for hint in tail_hints:
+        if hint not in deduped_tail:
+            deduped_tail.append(hint)
+
+    if deduped_tail:
+        parts.append("".join(deduped_tail[:2]))
+    return parts
+
+
 def infer_summary(text: str) -> str:
     if is_placeholder(text):
         return "等待写入描述"
     if contains_chinese(text):
         return ""
 
-    action = choose_action(text)
-    obj = choose_object(text)
-    summary = f"{action}{obj}"
+    for pattern, summary in SUMMARY_PATTERNS:
+        if pattern.search(text):
+            return shorten_summary(summary)
+
+    summary = "".join(build_summary_parts(text))
 
     if "batch" in text.lower() and "批量" not in summary:
         summary = f"批量{summary}"
