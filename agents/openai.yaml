@@ -1,4 +1,4 @@
 interface:
-  display_name: "chn-note-security-scan"
-  short_description: "安装 Skill 或 MCP 后先三选一，再执行中文备注和或安全审计"
-  default_prompt: "Use $chn-note-security-scan when installing a new skill or MCP. First ask the user whether to run Chinese annotation plus security audit, only Chinese annotation, or only security audit, then execute the chosen flow."
+  display_name: "CHN Skill Annotator"
+  short_description: "为技能描述补充中文注释"
+  default_prompt: "Add concise Chinese summaries to description fields in SKILL.md files under the Codex skills directory, skip entries that already contain Chinese, and support check or dry-run modes."

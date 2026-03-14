@@ -13,7 +13,7 @@
 如果已经有中文了，它会跳过，不重复修改。
 
 
-- 扫描当前目录下的 `SKILL.md`
+- 默认扫描 Codex 的 Skills 目录下的 `SKILL.md`
 - 找出还没有中文描述的文件
 - 先预览会改什么
 - 再把中文描述写进去
@@ -34,7 +34,10 @@ description: 中文摘要｜Original English description
 
 ## 怎么用
 
-把这个Skill下载到你常用的软件的Skill目录里，然后让你的AI走一个就行了。
+把这个 Skill 放进 Codex 的 Skills 目录，然后让你的 AI 走这个 Skill 就行了。
+
+默认会扫描 `$CODEX_HOME/skills`；如果没有设置 `CODEX_HOME`，就扫描 `~/.codex/skills`。  
+如果你想改成别的目录，也可以手动传 `--root`。
 
 ## 细节（全是AI写的，我看不懂）
 先检查有哪些文件需要处理：

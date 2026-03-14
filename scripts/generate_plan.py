@@ -5,12 +5,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
 
 CHINESE_RE = re.compile(r"[\u4e00-\u9fff]")
+DEFAULT_SKILLS_DIR = "skills"
 PLACEHOLDER_PATTERNS = (
     re.compile(r"replace with description", re.IGNORECASE),
     re.compile(r"\[todo:.*description", re.IGNORECASE),
@@ -82,8 +84,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--root",
-        default=".",
-        help="Root directory to scan recursively. Defaults to the current directory.",
+        default=None,
+        help="Root directory to scan recursively. Defaults to the Codex skills directory.",
     )
     parser.add_argument(
         "--output",
@@ -106,6 +108,13 @@ def parse_args() -> argparse.Namespace:
         help="Prefill a heuristic Chinese candidate summary for each pending entry.",
     )
     return parser.parse_args()
+
+
+def resolve_scan_root(root_arg: str | None) -> Path:
+    if root_arg:
+        return Path(root_arg).expanduser().resolve()
+    codex_home = Path(os.environ.get("CODEX_HOME", "~/.codex")).expanduser()
+    return (codex_home / DEFAULT_SKILLS_DIR).resolve()
 
 
 def iter_skill_files(root: Path) -> list[Path]:
@@ -187,7 +196,9 @@ def infer_summary(text: str) -> str:
 
     if "batch" in text.lower() and "批量" not in summary:
         summary = f"批量{summary}"
-    if "current directory" in text.lower() and "当前目录" not in summary and len(summary) <= 16:
+    if "skills directory" in text.lower() and "Skills目录" not in summary and len(summary) <= 14:
+        summary = f"{summary}（Skills目录）"
+    elif "current directory" in text.lower() and "当前目录" not in summary and len(summary) <= 16:
         summary = f"{summary}（当前目录）"
 
     return shorten_summary(summary)
@@ -195,7 +206,7 @@ def infer_summary(text: str) -> str:
 
 def main() -> int:
     args = parse_args()
-    root = Path(args.root).expanduser().resolve()
+    root = resolve_scan_root(args.root)
     output = Path(args.output).expanduser().resolve()
 
     if output.exists() and not args.overwrite:

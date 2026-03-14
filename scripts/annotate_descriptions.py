@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -13,6 +14,7 @@ from typing import Iterable
 
 
 SEPARATOR = "｜"
+DEFAULT_SKILLS_DIR = "skills"
 CHINESE_RE = re.compile(r"[\u4e00-\u9fff]")
 PLACEHOLDER_PATTERNS = (
     re.compile(r"replace with description", re.IGNORECASE),
@@ -51,8 +53,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--root",
-        default=".",
-        help="Root directory to scan recursively. Defaults to the current directory.",
+        default=None,
+        help="Root directory to scan recursively. Defaults to the Codex skills directory.",
     )
     parser.add_argument(
         "--plan",
@@ -64,6 +66,13 @@ def parse_args() -> argparse.Namespace:
         help="Print machine-readable JSON output in check mode.",
     )
     return parser.parse_args()
+
+
+def resolve_scan_root(root_arg: str | None) -> Path:
+    if root_arg:
+        return Path(root_arg).expanduser().resolve()
+    codex_home = Path(os.environ.get("CODEX_HOME", "~/.codex")).expanduser()
+    return (codex_home / DEFAULT_SKILLS_DIR).resolve()
 
 
 def iter_skill_files(root: Path) -> Iterable[Path]:
@@ -299,7 +308,7 @@ def run_apply(root: Path, plan_path: Path, dry_run: bool) -> int:
 
 def main() -> int:
     args = parse_args()
-    root = Path(args.root).expanduser().resolve()
+    root = resolve_scan_root(args.root)
 
     if args.mode == "check":
         return run_check(root, args.json)
